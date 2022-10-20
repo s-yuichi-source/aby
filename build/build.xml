@@ -1,0 +1,30 @@
+<project xmlns:if="ant:if" xmlns:unless="ant:unless" name="aby" basedir=".">
+    <condition property="mvn.cmd" value="${basedir}\mvnw.cmd" else="${basedir}\mvnw">
+        <os family="windows" />
+    </condition>
+
+    <taskdef resource="net/sf/antcontrib/antlib.xml" />
+
+    <condition property="os" value="win" else="mac">
+        <os family="windows" />
+    </condition>
+
+    <exec executable="docker-compose" resultproperty="docker.ret" failifexecutionfails="false">
+        <arg line="version" />
+    </exec>
+
+    <condition property="docker.installed">
+        <equals arg1="${docker.ret}" arg2="0" />
+    </condition>
+
+    <property name="targets" value="manager, user" />
+    <property name="maven.test.skip" value="true" />
+
+    <target name="install">
+        <exec executable="${mvn.cmd}" failonerror="true">
+            <arg line="install -Dmaven.test.skip=${maven.test.skip}" />
+        </exec>
+    </target>
+
+
+</project>
