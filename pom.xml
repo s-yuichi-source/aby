@@ -58,7 +58,6 @@
     </resources>
 
     <defaultGoal>antrun:run</defaultGoal>
-
     <plugins>
       <plugin>
         <artifactId>maven-antrun-plugin</artifactId>
@@ -75,7 +74,7 @@
           <execution>
             <phase>process-resources</phase>
             <goals>
-              <goal>resouces</goal>
+              <goal>resources</goal>
             </goals>
           </execution>
         </executions>
@@ -84,7 +83,6 @@
 
     <pluginManagement>
       <plugins>
-
         <plugin>
           <artifactId>maven-antrun-plugin</artifactId>
           <version>1.8</version>

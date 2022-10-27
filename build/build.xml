@@ -1,4 +1,4 @@
-<project xmlns:if="ant:if" xmlns:unless="ant:unless" name="aby" basedir=".">
+<project xmlns:if="ant:if" xmlns:unless="ant:unless" name="skill-manager" basedir=".">
     <condition property="mvn.cmd" value="${basedir}\mvnw.cmd" else="${basedir}\mvnw">
         <os family="windows" />
     </condition>
@@ -6,6 +6,10 @@
     <taskdef resource="net/sf/antcontrib/antlib.xml" />
 
     <condition property="os" value="win" else="mac">
+        <os family="windows" />
+    </condition>
+
+    <condition property="mvn.cmd" value="${basedir}\mvnw.cmd" else="${basedir}\mvnw">
         <os family="windows" />
     </condition>
 
@@ -17,14 +21,43 @@
         <equals arg1="${docker.ret}" arg2="0" />
     </condition>
 
-    <property name="targets" value="manager, user" />
     <property name="maven.test.skip" value="true" />
 
     <target name="install">
+        <antcall target="init-local-git" />
+        <antcall target="init-container" />
         <exec executable="${mvn.cmd}" failonerror="true">
             <arg line="install -Dmaven.test.skip=${maven.test.skip}" />
         </exec>
     </target>
 
+    <target name="init-local-git">
+        <exec executable="git" failonerror="true">
+            <arg line="config --local core.hooksPath ${deploy.srcdir}/.githooks" />
+        </exec>
+        <exec executable="git" failonerror="true">
+            <arg line="config --local core.autocrlf false" />
+        </exec>
+    </target>
+
+    <target name="init-container" if="docker.installed" unless="skip-init-container">
+        <condition property="port.arg" value="-Ddb.host.port=30001-30100 -Dweb.port=30101-30200 -Dmailhog.smtp.port=30201-30300 -Dmailhog.web.port=30301-30400" else="">
+            <equals arg1="${port.random}" arg2="true" />
+        </condition>
+
+        <exec executable="${mvn.cmd}" failonerror="true">
+            <arg line="clean" />
+        </exec>
+        <exec executable="${mvn.cmd}" failonerror="true">
+            <arg line="process-resources -N ${port.arg}" />
+        </exec>
+
+        <exec executable="docker-compose" failonerror="true">
+            <arg line="up -d --scale wait=0" />
+        </exec>
+        <exec executable="docker-compose" failonerror="true">
+            <arg line="run --rm -T wait dockerize -wait tcp://dbms:5432 -timeout 120s" />
+        </exec>
+    </target>
 
 </project>
